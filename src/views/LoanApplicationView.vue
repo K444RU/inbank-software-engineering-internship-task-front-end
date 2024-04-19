@@ -27,7 +27,6 @@
                   Estimate your monthly payments based on the chosen loan amount and time period.
                 </p>
               </div>
-
               <div class="col-12 col-lg-6 calculator-title pl-lg-6">
                 <div class="row no-gutters align-items-center">
                   <div class="col-12 px-0">
@@ -37,7 +36,7 @@
                           <div><label for="" class="">
                             Personal code
                           </label>
-                            <div class="i-input-control" style="background-color: rgb(255, 255, 255);"><!---->
+                            <div class="i-input-control" style="background-color: rgb(255, 255, 255);">
                               <input v-model="decisionRequest.personalCode" id="" type="number" tabindex="0"
                                      name="" autocomplete="on" class="">
                             </div>
@@ -81,19 +80,19 @@
                       </h5>
                       <div>
                         <span class="text-nowrap d-inline-block h1">
-                          <span>3000</span>
+                          <span>{{decisionResponse.approvedAmount}}</span>
                         </span>
                         <span>
                         </span>
                       </div>
                       <div>
-                        <button @click="applyForNewLoan" id="open-loan" type="button" class="btn mt-4 btn-secondary">Apply now</button>
+                        <button @click="newLoanApplication" id="apply-for-loan" type="button" class="btn mt-4 btn-secondary">Apply now</button>
                       </div>
-                    </div> <!---->
+                    </div>
                     <div class="col-12 mt-4">
                       <p class="small terms-text">
-                        <PositiveDecisionAlert v-if="decisionResponse.decisionDescription === 'positive'" />
-                        <NegativeDecisionAlert v-else-if="decisionResponse.decisionDescription === 'negative'" />
+                        <PositiveDecisionAlert :message="PositiveDecisionAlertMessage.message" />
+                        <NegativeDecisionAlert :message="errorResponse.errors" />
                       </p>
                     </div>
                   </div>
@@ -111,9 +110,12 @@
 <script>
 
 
+import PositiveDecisionAlert from "@/components/PositiveDecisionAlert";
+import NegativeDecisionAlert from "@/components/NegativeDecisionAlert";
+
 export default {
   name: "LoanApplicationView",
-  components: {},
+  components: {PositiveDecisionAlert, NegativeDecisionAlert},
   data() {
     return {
       decisionRequest: {
@@ -125,9 +127,9 @@ export default {
         decision: '',
         approvedAmount: 0,
         approvedPeriod: 0,
-        decisionDescription: 'positive'
+        decisionDescription: ''
       },
-      NegativeDecisionAlertMessage: {
+      errorResponse: {
         errors: []
       },
       PositiveDecisionAlertMessage: {
@@ -136,45 +138,48 @@ export default {
     }
   },
   methods: {
-    applyForNewLoan() {
-      this.NegativeDecisionAlertMessage.errors = []
+    newLoanApplication () {
+      this.errorResponse.errors = []
       this.PositiveDecisionAlertMessage.message = ''
+
       if (this.decisionRequest.personalCode === 0 || this.decisionRequest.loanAmount === 0 ||
           this.decisionRequest.loanPeriod === 0) {
-        this.NegativeDecisionAlertMessage.errors.push('Fill in all fields')
+        this.errorResponse.errors.push('Fill in all fields')
       } else if ((this.decisionRequest.loanAmount < 2000 || this.decisionRequest.loanAmount > 10000) ||
           (this.decisionRequest.loanPeriod < 12 || this.decisionRequest.loanPeriod > 60)) {
         if (this.decisionRequest.loanAmount < 2000 || this.decisionRequest.loanAmount > 10000) {
-          this.NegativeDecisionAlertMessage.errors.push('The minimum amount that can be requested is 2000 EUR and ' +
+          this.errorResponse.errors.push('The minimum amount that can be requested is 2000 EUR and ' +
               'the maximum amount is 10000 EUR')
         }
         if (this.decisionRequest.loanPeriod < 12 || this.decisionRequest.loanPeriod > 60) {
-          this.NegativeDecisionAlertMessage.errors.push('The minimum loan period that can be applied for is 12 months ' +
+          this.errorResponse.errors.push('The minimum loan period that can be applied for is 12 months ' +
               'and the maximum period is 60 months')
         }
       } else {
-        this.$http.get("api/loan/decision", {
-              params: {
-                personalCode: this.decisionRequest.personalCode,
-                loanAmount: this.decisionRequest.loanAmount,
-                loanPeriod: this.decisionRequest.loanPeriod
-              }
-            }
-        ).then(response => {
-          this.decisionRequest = response.data;
-          this.decisionResponse = response.data;
-          if (this.decisionResponse.decisionDescription == "Positive"){
-            this.PositiveDecisionAlertMessage.message = 'Your approved loan amount is '
-                + this.decisionResponse.approvedAmount + ' EUR, and Your approved loan period is '
-                + this.decisionResponse.approvedPeriod + ' months.'
-          } else if(this.decisionResponse.decisionDescription == "Negative, person has debt"){
-            this.NegativeDecisionAlertMessage.errors.push('Negative decision. Person has debt')
-          } else {
-            this.NegativeDecisionAlertMessage.errors.push('Negative decision')
+        this.$http.get("/loan/decision", {
+          params: {
+            personalCode: this.decisionRequest.personalCode,
+            loanAmount: this.decisionRequest.loanAmount,
+            loanPeriod: this.decisionRequest.loanPeriod
           }
-        }).catch(error => {
-          this.NegativeDecisionAlertMessage = error.response.data
         })
+            .then(response => {
+              this.decisionRequest = response.data;
+              this.decisionResponse = response.data;
+
+              if (this.decisionResponse.decisionDescription === "Positive") {
+                this.PositiveDecisionAlertMessage.message = 'Your approved loan amount is ' +
+                    this.decisionResponse.approvedAmount + ' EUR, and Your approved loan period is ' +
+                    this.decisionResponse.approvedPeriod + ' months.'
+              } else if (this.decisionResponse.decisionDescription === "Negative, person has debt") {
+                this.errorResponse.errors.push('Negative decision. Person has debt')
+              } else {
+                this.errorResponse.errors.push('Negative decision')
+              }
+            })
+            .catch(error => {
+              this.errorResponse = error.response.data
+            })
       }
     },
 
