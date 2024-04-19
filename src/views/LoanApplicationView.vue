@@ -1,5 +1,4 @@
 <template>
-
   <div class="app-content d-flex flex-column min-vh-100">
     <nav class="mb-16">
       <section>
@@ -38,8 +37,10 @@
                           <div><label for="" class="">
                             Personal code
                           </label>
-                            <div class="i-input-control" style="background-color: rgb(255, 255, 255);"><!----> <input
-                                id="" type="number" tabindex="0" name="" autocomplete="on" class=""> <!----></div>
+                            <div class="i-input-control" style="background-color: rgb(255, 255, 255);"><!---->
+                              <input v-model="decisionRequest.personalCode" id="" type="number" tabindex="0"
+                                     name="" autocomplete="on" class="">
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -50,8 +51,10 @@
                           <div><label for="" class="">
                             Amount
                           </label>
-                            <div class="i-input-control" style="background-color: rgb(255, 255, 255);"><!----> <input
-                                id="" type="number" tabindex="0" name="" autocomplete="on" class=""> <!----></div>
+                            <div class="i-input-control" style="background-color: rgb(255, 255, 255);">
+                              <input v-model="decisionRequest.loanAmount" id="" type="number" tabindex="0"
+                                     name="" autocomplete="on" class="">
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -62,13 +65,15 @@
                           <div><label for="" class="">
                             Period
                           </label>
-                            <div class="i-input-control" style="background-color: rgb(255, 255, 255);"><!----> <input
-                                id="" type="number" tabindex="0" name="" autocomplete="on" class=""> <!----></div>
+                            <div class="i-input-control" style="background-color: rgb(255, 255, 255);">
+                              <input v-model="decisionRequest.loanPeriod" id="" type="number" tabindex="0"
+                                     name="" autocomplete="on" class="">
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div> <!---->
+                  </div>
                   <div>
                     <div class="col-12 text-center mt-6">
                       <h5 class="mb-0 mt-2">
@@ -82,14 +87,13 @@
                         </span>
                       </div>
                       <div>
-                        <button id="open-loan" type="button" class="btn mt-4 btn-secondary"><!---->
-                          Apply now
-                          <!----> <!----></button>
+                        <button @click="applyForNewLoan" id="open-loan" type="button" class="btn mt-4 btn-secondary">Apply now</button>
                       </div>
                     </div> <!---->
                     <div class="col-12 mt-4">
                       <p class="small terms-text">
-                    You have successfully applied for inbank small loan. Your approved period is 12 months.
+                        <PositiveDecisionAlert v-if="decisionResponse.decisionDescription === 'positive'" />
+                        <NegativeDecisionAlert v-else-if="decisionResponse.decisionDescription === 'negative'" />
                       </p>
                     </div>
                   </div>
@@ -105,15 +109,76 @@
 </template>
 
 <script>
+
+
 export default {
   name: "LoanApplicationView",
   components: {},
   data() {
-    return {}
+    return {
+      decisionRequest: {
+        personalCode: '',
+        loanAmount: 0,
+        loanPeriod: 0,
+      },
+      decisionResponse: {
+        decision: '',
+        approvedAmount: 0,
+        approvedPeriod: 0,
+        decisionDescription: 'positive'
+      },
+      NegativeDecisionAlertMessage: {
+        errors: []
+      },
+      PositiveDecisionAlertMessage: {
+        message: ''
+      },
+    }
   },
-  methods: {}
+  methods: {
+    applyForNewLoan() {
+      this.NegativeDecisionAlertMessage.errors = []
+      this.PositiveDecisionAlertMessage.message = ''
+      if (this.decisionRequest.personalCode === 0 || this.decisionRequest.loanAmount === 0 ||
+          this.decisionRequest.loanPeriod === 0) {
+        this.NegativeDecisionAlertMessage.errors.push('Fill in all fields')
+      } else if ((this.decisionRequest.loanAmount < 2000 || this.decisionRequest.loanAmount > 10000) ||
+          (this.decisionRequest.loanPeriod < 12 || this.decisionRequest.loanPeriod > 60)) {
+        if (this.decisionRequest.loanAmount < 2000 || this.decisionRequest.loanAmount > 10000) {
+          this.NegativeDecisionAlertMessage.errors.push('The minimum amount that can be requested is 2000 EUR and ' +
+              'the maximum amount is 10000 EUR')
+        }
+        if (this.decisionRequest.loanPeriod < 12 || this.decisionRequest.loanPeriod > 60) {
+          this.NegativeDecisionAlertMessage.errors.push('The minimum loan period that can be applied for is 12 months ' +
+              'and the maximum period is 60 months')
+        }
+      } else {
+        this.$http.get("api/loan/decision", {
+              params: {
+                personalCode: this.decisionRequest.personalCode,
+                loanAmount: this.decisionRequest.loanAmount,
+                loanPeriod: this.decisionRequest.loanPeriod
+              }
+            }
+        ).then(response => {
+          this.decisionRequest = response.data;
+          this.decisionResponse = response.data;
+          if (this.decisionResponse.decisionDescription == "Positive"){
+            this.PositiveDecisionAlertMessage.message = 'Your approved loan amount is '
+                + this.decisionResponse.approvedAmount + ' EUR, and Your approved loan period is '
+                + this.decisionResponse.approvedPeriod + ' months.'
+          } else if(this.decisionResponse.decisionDescription == "Negative, person has debt"){
+            this.NegativeDecisionAlertMessage.errors.push('Negative decision. Person has debt')
+          } else {
+            this.NegativeDecisionAlertMessage.errors.push('Negative decision')
+          }
+        }).catch(error => {
+          this.NegativeDecisionAlertMessage = error.response.data
+        })
+      }
+    },
 
+  }
 }
 </script>
-
 <style src="@/assets/LoanApplicationStyle.css"></style>
