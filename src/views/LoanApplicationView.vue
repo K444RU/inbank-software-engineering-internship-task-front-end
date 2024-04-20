@@ -164,17 +164,17 @@ export default {
           }
         })
             .then(response => {
-              this.decisionRequest = response.data;
-              this.decisionResponse = response.data;
-
-              if (this.decisionResponse.decisionDescription === "Positive") {
-                this.PositiveDecisionAlertMessage.message = 'Your approved loan amount is ' +
-                    this.decisionResponse.approvedAmount + ' EUR, and Your approved loan period is ' +
-                    this.decisionResponse.approvedPeriod + ' months.'
-              } else if (this.decisionResponse.decisionDescription === "Negative, person has debt") {
-                this.errorResponse.errors.push('Negative decision. Person has debt')
-              } else {
+              if (response.data.decisionDescription === "Negative" && response.data.approvedAmount === 0) {
                 this.errorResponse.errors.push('Negative decision')
+              } else {
+                this.decisionResponse = response.data;
+                if (this.decisionResponse.decisionDescription === "Positive") {
+                  this.PositiveDecisionAlertMessage.message = 'Your approved loan amount is ' +
+                      this.decisionResponse.approvedAmount + ' EUR, and Your approved loan period is ' +
+                      this.decisionResponse.approvedPeriod + ' months.'
+                } else {
+                  this.errorResponse.errors.push('Negative decision')
+                }
               }
             })
             .catch(error => {
@@ -182,6 +182,7 @@ export default {
             })
       }
     },
+
 
   }
 }
