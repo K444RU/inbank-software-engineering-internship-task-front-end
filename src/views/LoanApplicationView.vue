@@ -51,8 +51,7 @@
                             Amount
                           </label>
                             <div class="i-input-control" style="background-color: rgb(255, 255, 255);">
-                              <input v-model="decisionRequest.loanAmount" id="" type="number" tabindex="0"
-                                     name="" autocomplete="on" class="">
+                              <input v-model="decisionRequest.loanAmount" id="" type="number" value="">
                             </div>
                           </div>
                         </div>
@@ -73,7 +72,7 @@
                       </div>
                     </div>
                   </div>
-                  <div>
+                  <div class="col-12 text-center mt-6">
                     <div class="col-12 text-center mt-6">
                       <h5 class="mb-0 mt-2">
                         Application decision:
@@ -86,13 +85,17 @@
                         </span>
                       </div>
                       <div>
-                        <button @click="newLoanApplication" id="apply-for-loan" type="button" class="btn mt-4 btn-secondary">Apply now</button>
+                        <button @click="newLoanApplication" id="apply-for-loan"
+                                type="button" class="btn mt-4 btn-secondary">Apply now
+                        </button>
                       </div>
                     </div>
-                    <div class="col-12 mt-4">
-                      <p class="small terms-text">
+                    <div class="col-12 mt-4 text-center">
+                      <p style="" class="small terms-text">
                         <PositiveDecisionAlert :message="PositiveDecisionAlertMessage.message" />
-                        <NegativeDecisionAlert :message="errorResponse.errors" />
+                        <template v-if="errorResponse.errors.length > 0">
+                          <NegativeDecisionAlert :message="errorResponse.errors" />
+                        </template>
                       </p>
                     </div>
                   </div>
@@ -104,12 +107,9 @@
       </main>
     </main>
   </div>
-
 </template>
 
 <script>
-
-
 import PositiveDecisionAlert from "@/components/PositiveDecisionAlert";
 import NegativeDecisionAlert from "@/components/NegativeDecisionAlert";
 
@@ -182,8 +182,6 @@ export default {
             })
       }
     },
-
-
   }
 }
 </script>

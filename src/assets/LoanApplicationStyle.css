@@ -373,6 +373,16 @@ p {
     line-height: 1.125rem;
 }
 
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    display: none;
+}
+
+#decisionTextContainer {
+    display: none; /* Initially hide the container */
+}
+
 .i-input span, .i-input label {
     color: #606060;
     font-weight: 400;
@@ -437,6 +447,10 @@ label {
 
 .i-input input {
     padding: 0 1rem;
+}
+
+.i-input input:focus {
+    outline: none;
 }
 
 .i-input input {
@@ -518,13 +532,16 @@ h5 {
     background: #AA93FF;
     border-color: #AA93FF;
 }
+
 .btn {
     padding: .75rem 1.5rem;
     border-radius: 6.25rem;
 }
+
 .mt-4 {
     margin-top: 1.5rem !important;
 }
+
 .btn {
     display: inline-block;
     font-weight: 400;
@@ -537,20 +554,26 @@ h5 {
     line-height: 1.5;
     transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
+
 button, [type="button"], [type="reset"], [type="submit"] {
     -webkit-appearance: button;
 }
+
 button, select {
     text-transform: none;
 }
+
 button, input {
     overflow: visible;
 }
 
-.mt-4{
+.mt-4 {
     margin-top: 1.5rem;
 }
+
 .small {
     font-size: 1rem;
     line-height: 1.25rem;
 }
+
+
